@@ -7,9 +7,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -24,17 +22,9 @@ import javax.swing.JTabbedPane;
 import javax.swing.JToolBar;
 import javax.swing.WindowConstants;
 
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.DateAxis;
-import org.jfree.chart.plot.XYPlot;
-import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
-import org.jfree.data.time.Day;
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesCollection;
-
 import datechooser.beans.DateChooserCombo;
+import entidades.CambioMoneda;
+import servicios.ServicioCambioMoneda;
 
 public class FrmCambiosMonedas extends JFrame {
 
@@ -45,6 +35,7 @@ public class FrmCambiosMonedas extends JFrame {
     private JPanel pnlEstadisticas;
 
     private List<String> monedas;
+    private List<CambioMoneda> datos;
 
     public FrmCambiosMonedas() {
 
@@ -115,6 +106,14 @@ public class FrmCambiosMonedas extends JFrame {
         getContentPane().add(tb, BorderLayout.NORTH);
         getContentPane().add(pnlCambios, BorderLayout.CENTER);
 
+        cargarDatos();
+    }
+
+    private void cargarDatos() {
+        datos = ServicioCambioMoneda.getDatos(System.getProperty("user.dir") + "/src/datos/Cambios Monedas.csv");
+        monedas = ServicioCambioMoneda.getMonedas(datos);
+        DefaultComboBoxModel dcm = new DefaultComboBoxModel(monedas.toArray());
+        cmbMoneda.setModel(dcm);
     }
 
     private void btnGraficarClick() {
@@ -123,7 +122,6 @@ public class FrmCambiosMonedas extends JFrame {
             String moneda = (String) cmbMoneda.getSelectedItem();
             LocalDate desde = dccDesde.getSelectedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate hasta = dccHasta.getSelectedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
 
             // Cambiar a la pestaña de Grafica
             tpCambiosMoneda.setSelectedIndex(0);
@@ -137,11 +135,16 @@ public class FrmCambiosMonedas extends JFrame {
             LocalDate desde = dccDesde.getSelectedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate hasta = dccHasta.getSelectedDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-
             // Cambiar a la pestaña de estadísticas
-            tpCambiosMoneda.setSelectedIndex(1); 
+            tpCambiosMoneda.setSelectedIndex(1);
+
+            var cambios = ServicioCambioMoneda.filtrar(moneda, desde, hasta, datos);
+            for (CambioMoneda cambio : cambios) {
+                System.out.println(cambio.getMoneda() + " " + cambio.getFecha());
+            }
 
         }
     }
+
 
 }
